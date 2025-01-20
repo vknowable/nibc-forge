@@ -1,0 +1,23 @@
+services:
+  namada-node:
+    restart: unless-stopped
+    hostname: namada-node
+    image: debian:bookworm-slim
+    entrypoint: [ "sh", "-c", "chmod +x /docker-entrypoint-scripts.d/on-start.sh && /docker-entrypoint-scripts.d/on-start.sh" ]
+    volumes:
+      - ./on-start.sh:/docker-entrypoint-scripts.d/on-start.sh # entrypoint
+      - ./init-chain.sh:/docker-entrypoint-scripts.d/init-chain.sh:ro
+      - ./genesis:/root/genesis:ro
+      - ./bin:/root/bin:ro
+
+    environment:
+      - CHAIN_PREFIX=${CHAIN_PREFIX:-namada-local}
+      - GENESIS_DELAY_MINS=${GENESIS_DELAY_MINS:-0}
+      - VALIDATOR_KEY=${VALIDATOR_KEY:-0009164d0bc57433fef0c112fa0d9268a12e4e34ca150b6c575b74ae6dd3d629bb} # tnam1qrxzn4tfwwytt9s24y8g8a2fmw0mzd58fyfcjuuq
+      - RELAYER_KEY=${RELAYER_KEY:-00915b40d8ab5b59f4b7d2448bc290f1542a00f84d9a0be1b4e3e4d1ef17349b78} # tnam1qpdmpu26vcathujg6psxtk3vt64lwsddqvvss3cg
+      - FAUCET_KEY=${FAUCET_KEY:-008a0fc66077af371372baed4e249b743bccda860e5891e9ea909f500ccc035322} # tnam1qrdkjtm4304zztd6x3c6gngpnrexdz5r6gqvq2h6
+    ports:
+      - "${RPC_PORT:-26657}:26657"
+
+volumes:
+  namada-data:

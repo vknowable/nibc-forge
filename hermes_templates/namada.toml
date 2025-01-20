@@ -1,0 +1,22 @@
+[[chains]]
+id = 'CHAIN'
+type = 'Namada'
+rpc_addr = 'http://HOST:26657'
+grpc_addr = 'https://HOST:9090' # not used
+event_source = { mode = 'push', url = 'ws://HOST:26657/websocket', batch_delay = '500ms' }
+account_prefix = ''
+key_name = 'KEY'
+store_prefix = 'ibc'
+trusting_period = '1750s'
+gas_price = { price = 0.000001, denom = 'DENOM' }
+gas_multiplier = 1.75
+max_gas = 650000
+rpc_timeout = '60s'
+memo_prefix = ''
+
+[chains.packet_filter]
+policy = 'allow'
+list = [[
+    'transfer',
+    'channel-*',
+]]

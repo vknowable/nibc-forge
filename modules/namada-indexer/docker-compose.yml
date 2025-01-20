@@ -1,0 +1,131 @@
+x-defaults: &defaults
+  restart: unless-stopped
+  depends_on:
+      postgres:
+        condition: service_healthy
+      dragonfly:
+        condition: service_healthy
+  build: &build
+    context: .
+    dockerfile: Dockerfile
+    args: &build-args
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:password@postgres:5433/namada-indexer}
+      TENDERMINT_URL: ${TENDERMINT_URL:-http://namada-node:26657}
+      CACHE_URL: ${CACHE_URL:-redis://dragonfly:6379}
+      WEBSERVER_PORT: ${WEBSERVER_PORT:-5001}
+  environment: &env-vars
+    <<: *build-args
+  command: "./service \
+    --tendermint-url ${TENDERMINT_URL:-http://namada-node:26657} \
+    --database-url ${DATABASE_URL:-postgres://postgres:password@postgres:5433/namada-indexer}"
+
+services:
+  chain:
+    <<: *defaults
+    image: namada/chain-indexer
+    command: "./service \
+      --tendermint-url ${TENDERMINT_URL:-http://namada-node:26657} \
+      --database-url ${DATABASE_URL:-postgres://postgres:password@postgres:5433/namada-indexer} \
+      --initial-query-retry-time=15"
+    build:
+      <<: *build
+      args:
+        <<: *build-args
+        PACKAGE: chain
+
+  governance:
+    <<: *defaults
+    image: namada/governance-indexer
+    build:
+      <<: *build
+      args:
+        <<: *build-args
+        PACKAGE: governance
+
+  pos:
+    <<: *defaults
+    image: namada/pos-indexer
+    build:
+      <<: *build
+      args:
+        <<: *build-args
+        PACKAGE: pos
+
+  rewards:
+    <<: *defaults
+    image: namada/rewards-indexer
+    build:
+      <<: *build
+      args:
+        <<: *build-args
+        PACKAGE: rewards
+
+  parameters:
+    <<: *defaults
+    image: namada/parameters-indexer
+    build:
+      <<: *build
+      args:
+        <<: *build-args
+        PACKAGE: parameters
+
+  transactions:
+    <<: *defaults
+    image: namada/transaction-indexer
+    build:
+      <<: *build
+      args:
+        <<: *build-args
+        PACKAGE: transactions
+
+  webserver:
+    image: namada/webserver-indexer
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PACKAGE: webserver
+    command: "./service"
+    ports:
+      - ${WEBSERVER_PORT:-5001}:5001
+    environment:
+      <<: *env-vars
+    healthcheck:
+      test: curl --fail http://localhost:5001/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    command: ["postgres", "-c", "listen_addresses=0.0.0.0", "-c", "max_connections=200", "-p", "5433"]
+    expose:
+      - "5433"
+    ports:
+      - "5433:5433"
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      PGUSER: postgres
+      POSTGRES_DB: namada-indexer
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d namada-indexer -h localhost -p 5433"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
+    command: --logtostderr --cache_mode=true --port 6379 -dbnum 1
+    ulimits:
+      memlock: -1
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
