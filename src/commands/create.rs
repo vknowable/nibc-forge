@@ -1,9 +1,12 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use colored::Colorize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
+use serde_yaml::{Value, to_string};
 use toml_edit::{value, DocumentMut, Item};
+use regex::Regex;
 
 use crate::config::{Config, ModuleConfig};
 use crate::utils::HERMES_TEMPLATE_DIR;
@@ -80,18 +83,18 @@ pub fn handle_create(args: crate::CreateArgs) -> Result<(), AppError> {
 
     // Ensure unique hostnames and module_dirs
     // TODO: this is a temporary solution until a strategy to handle multiple copies of the same module is in place
-    let mut seen_hostnames = HashSet::new();
-    let mut seen_module_dirs = HashSet::new();
-    for module in &config.modules {
-        if let Some(hostname) = &module.rpc_hostname {
-            if !seen_hostnames.insert(hostname) {
-                validation_errors.push("All modules must have a unique hostname".to_string());
-            }
-        }
-        if !seen_module_dirs.insert(&module.module_dir) {
-            validation_errors.push("All modules must have a unique module_dir".to_string());
-        }
-    }
+    // let mut seen_hostnames = HashSet::new();
+    // let mut seen_module_dirs = HashSet::new();
+    // for module in &config.modules {
+    //     if let Some(hostname) = &module.rpc_hostname {
+    //         if !seen_hostnames.insert(hostname) {
+    //             validation_errors.push("All modules must have a unique hostname".to_string());
+    //         }
+    //     }
+    //     if !seen_module_dirs.insert(&module.module_dir) {
+    //         validation_errors.push("All modules must have a unique module_dir".to_string());
+    //     }
+    // }
 
     // TODO: check docker compose files for conflicting host ports, volume names, service names, or docker hostnames
     // // Check for conflicts in docker-compose.yml
@@ -146,25 +149,53 @@ pub fn handle_create(args: crate::CreateArgs) -> Result<(), AppError> {
     // Create the deployment directory
     fs::create_dir_all(deployment_dir).map_err(AppError::Io)?;
 
+    // HashMap to keep track of how many times each module_dir has been copied, so we can append the count to the directory name
+    let mut module_counts: HashMap<String, usize> = HashMap::new();
+
     // Copy the module directories to the deployment directory
     for module in &config.modules {
         let module_src = format!("{}", module.module_dir);
-        let module_subdir = Path::new(&module_src).file_name().unwrap().to_str().unwrap();
-        let module_dst = deployment_dir.join(module_subdir);
+        let base_name = Path::new(&module_src).file_name().unwrap().to_str().unwrap();
+
+        // Determine a unique destination directory
+        let mut module_dst = deployment_dir.join(&base_name);
+        let count = module_counts.entry(base_name.to_string()).or_insert(1);
+        
+        if *count > 1 {
+            module_dst = deployment_dir.join(format!("{}{}", base_name, count));
+        }
+
         copy_dir_recursively(&module_src, &module_dst)?;
 
         // Write docker_env variables to the module's .env file
+        let mut env_content = String::new();
         if let Some(variable_list) = &module.docker_env {
-            let env_variables = variable_list.replace(',', "\n");
-            let env_file_path = module_dst.join(".env");
-
-            fs::write(&env_file_path, env_variables).map_err(|err| {
-                AppError::InvalidConfig(format!(
-                    "Failed to write .env file to {}: {}",
-                    env_file_path.display(), err
-                ))
-            })?;
+            env_content.push_str(&variable_list.replace(',', "\n"));
+            env_content.push('\n');
         }
+        // Add HOSTNAME to .env
+        if let Some(hostname) = &module.rpc_hostname {
+            env_content.push_str(&format!("HOSTNAME={}\n", hostname));
+        }
+        let env_file_path = module_dst.join(".env");
+        fs::write(&env_file_path, env_content).map_err(|err| {
+            AppError::InvalidConfig(format!(
+                "Failed to write .env file to {}: {}",
+                env_file_path.display(),
+                err
+            ))
+        })?;
+
+        // Modify docker-compose.yml service names with a suffix if necessary
+        if *count > 1 {
+            let compose_file = module_dst.join("docker-compose.yml");
+            if compose_file.exists() {
+                let compose_content = fs::read_to_string(&compose_file).map_err(AppError::Io)?;
+                let updated_content = modify_service_names(&compose_content, &count.to_string());
+                fs::write(&compose_file, updated_content?)?;
+            }
+        }
+        *count += 1;
     }
 
     // If a hermes module is present, generate the required chainlist.json and hermes config.toml files based on the other included modules
@@ -253,6 +284,34 @@ fn copy_dir_recursively(src: &str, dst: &Path) -> Result<(), AppError> {
 //         None
 //     }
 // }
+
+#[derive(Debug, Deserialize, Serialize)]
+struct DockerCompose {
+    services: HashMap<String, Value>, // The services section
+    // You can include other sections like `version`, `networks`, etc., as needed
+}
+
+fn modify_service_names(compose_content: &str, suffix: &str) -> Result<String, AppError> {
+    // Parse the YAML content into a DockerCompose struct
+    let mut docker_compose: DockerCompose = serde_yaml::from_str(compose_content)
+        .map_err(|err| AppError::InvalidConfig(format!("Failed to deserialize YAML: {}", err)))?;
+
+    // Iterate through the services and append the suffix to the service names
+    let services = docker_compose.services.clone();
+    for (service_name, _) in services {
+        if let Some(_service) = docker_compose.services.get_mut(&service_name) {
+            let new_name = format!("{}{}", service_name, suffix);
+            if let Some(service) = docker_compose.services.remove(&service_name) {
+                docker_compose.services.insert(new_name, service);
+            }
+        }
+    }
+
+    // Serialize the updated DockerCompose back into YAML
+    let updated_yaml = to_string(&docker_compose).map_err(|err| AppError::InvalidConfig(format!("Failed to serialize YAML: {}", err)))?;
+    
+    Ok(updated_yaml)
+}
 
 fn generate_chainlist_json(modules: &Vec<&ModuleConfig>, output_path: PathBuf) -> Result<(), AppError> {
     let mut chain_json = Vec::new();

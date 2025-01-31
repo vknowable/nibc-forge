@@ -6,13 +6,13 @@ if [ ! -f /root/.gaia/config/genesis.json ]; then
   echo "Initializing chain..."
   source /docker-entrypoint-scripts.d/init-chain.sh
 else
-  echo "Resuming..."
+  echo "(Re)starting node..."
 fi
 
 gaiad start \
   --home /root/.gaia \
   --pruning=nothing \
-  --minimum-gas-prices=100uatom \
+  --minimum-gas-prices="100${DENOM}" \
   --log_level=info \
   --api.enable \
   --api.enabled-unsafe-cors \

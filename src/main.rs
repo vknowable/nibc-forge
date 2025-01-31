@@ -26,7 +26,7 @@ enum Commands {
     Stop(DeploymentArgs),
 
     /// Clean up deployment data
-    Clean(CleanArgs),
+    Clean(DeploymentArgs),
 
     /// List containers, networks and volumes associated with a deployment
     List(DeploymentArgs),
@@ -34,8 +34,8 @@ enum Commands {
     /// List the IBC channels of a deployment by querying the Hermes instance
     IbcChannels(DeploymentArgs),
 
-    /// Dump the Namada ledger contents to a toml file
-    DumpDb(DumpDbArgs),
+    // TODO: Dump the Namada ledger contents to a toml file
+    // DumpDb(DumpDbArgs),
 }
 
 #[derive(Args)]
@@ -57,17 +57,6 @@ pub struct DeploymentArgs {
 }
 
 #[derive(Args)]
-pub struct CleanArgs {
-    /// Directory of the deployment
-    #[arg(long)]
-    deployment_dir: String,
-
-    /// Wipe chain data if present
-    #[arg(long)]
-    chain_data: bool,
-}
-
-#[derive(Args)]
 pub struct DumpDbArgs {
     /// Output file for the database dump (TOML format)
     #[arg(long)]
@@ -84,6 +73,6 @@ fn main() -> Result<(), error::AppError> {
         Commands::Clean(args) => handle_clean(args),
         Commands::List(args) => handle_list(args),
         Commands::IbcChannels(args) => handle_ibc_channels(args),
-        Commands::DumpDb(args) => handle_dump_db(args),
+        // Commands::DumpDb(args) => handle_dump_db(args),
     }
 }

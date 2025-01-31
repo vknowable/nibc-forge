@@ -1,0 +1,34 @@
+# Create a local namada and gaia chain and connect them with hermes; also include namada-indexer, namada-masp-indexer, and pg-admin
+
+[[modules]]
+module_dir = "modules/namada"
+type = "namada"
+rpc_hostname = "namada-node"
+relayer_key = "00915b40d8ab5b59f4b7d2448bc290f1542a00f84d9a0be1b4e3e4d1ef17349b78"
+hermes_template = "hermes_templates/namada.toml"
+docker_env = 'RPC_PORT=46678'
+
+[[modules]]
+module_dir = "modules/gaia"
+type = "gaia"
+rpc_hostname = "gaia-node"
+relayer_key = "voyage dust hand garlic fun trend bomb basic whisper mail camp egg basic normal dial crater prosper verb lyrics couch twenty matrix black example"
+hermes_template = "hermes_templates/gaia.toml"
+docker_env = 'RPC_PORT=46688'
+
+[[modules]]
+module_dir = "modules/hermes"
+type = "hermes"
+hermes_template = "hermes_templates/hermes.toml"
+
+[[modules]]
+module_dir = "modules/namada-indexer"
+type = "aux"
+
+[[modules]]
+module_dir = "modules/namada-masp-indexer"
+type = "aux"
+
+[[modules]]
+module_dir = "modules/pg-admin"
+type = "aux"

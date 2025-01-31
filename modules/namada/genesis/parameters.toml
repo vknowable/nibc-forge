@@ -1,0 +1,55 @@
+[parameters]
+max_tx_bytes = 1048576
+native_token = "nam"
+is_native_token_transferable = true
+min_num_of_blocks = 112
+max_proposal_bytes = 6291456
+# note: vp/tx allowlist will be filled in be initialization script; no need to enter manually
+vp_allowlist = []
+tx_allowlist = []
+implicit_vp = "vp_implicit"
+epochs_per_year = 105120
+masp_epoch_multiplier = 4
+max_block_gas = 3000000
+masp_fee_payment_gas_limit = 100000
+gas_scale = 50000
+
+[parameters.minimum_gas_price]
+nam = "0.000001"
+
+[pos_params]
+max_validator_slots = 255
+pipeline_len = 2
+unbonding_len = 53
+tm_votes_per_token = "1"
+block_proposer_reward = "0.125"
+block_vote_reward = "0.1"
+max_inflation_rate = "0"
+target_staked_ratio = "0.4"
+duplicate_vote_min_slash_rate = "0.001"
+light_client_attack_min_slash_rate = "0.001"
+cubic_slashing_window_length = 1
+validator_stake_threshold = "1000000000"
+liveness_window_check = 10000
+liveness_threshold = "0.1"
+rewards_gain_p = "0.25"
+rewards_gain_d = "0.25"
+
+[gov_params]
+min_proposal_fund = 2000
+max_proposal_code_size = 1000000
+min_proposal_voting_period = 3
+max_proposal_period = 84
+max_proposal_content_size = 10000
+min_proposal_grace_epochs = 1
+max_proposal_latency = 8
+
+[pgf_params]
+stewards = []
+pgf_inflation_rate = "0"
+stewards_inflation_rate = "0"
+maximum_number_of_stewards = 5
+
+[ibc_params]
+default_mint_limit = "1000000000000"
+default_per_epoch_throughput_limit = "1000000000000"

@@ -12,7 +12,7 @@ pub fn handle_ibc_channels(args: crate::DeploymentArgs) -> Result<(), AppError> 
 
     let deployment_dir = Path::new(&args.deployment_dir);
     let project_name = deployment_dir.file_name().unwrap().to_str().unwrap();
-    let hermes_container = format!("{}_hermes_1", project_name);
+    let hermes_container = format!("{}-hermes-1", project_name);
 
     // Channel json files are expected to be in /root/.hermes/ of Hermes container with filenames in the format ${chain_id_a}_${chain_id_b}.json
     let ls_output = Command::new("docker")

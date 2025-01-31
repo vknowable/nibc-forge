@@ -7,7 +7,7 @@ event_source = { mode = 'push', url = 'ws://HOST:26657/websocket', batch_delay =
 account_prefix = ''
 key_name = 'KEY'
 store_prefix = 'ibc'
-trusting_period = '1750s'
+trusting_period = '15000s'
 gas_price = { price = 0.000001, denom = 'DENOM' }
 gas_multiplier = 1.75
 max_gas = 650000

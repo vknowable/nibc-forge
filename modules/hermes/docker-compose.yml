@@ -16,6 +16,3 @@ services:
     # ports:
       # - "30000:3000" # rest api port
       # - "30001:3001" # telemetry port
-
-volumes:
-  hermes-data:

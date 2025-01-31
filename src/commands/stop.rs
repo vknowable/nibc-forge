@@ -13,7 +13,8 @@ pub fn handle_stop(args: crate::DeploymentArgs) -> Result<(), AppError> {
     let compose_files = deployment_compose_files(deployment_dir)?;
 
     // Stop running containers associated with this deployment
-    let mut stop_command = Command::new("docker-compose");
+    let mut stop_command = Command::new("docker");
+    stop_command.arg("compose");
     for compose_file in &compose_files {
         stop_command.arg("-f").arg(compose_file.to_str().unwrap());
     }
@@ -26,7 +27,7 @@ pub fn handle_stop(args: crate::DeploymentArgs) -> Result<(), AppError> {
 
     if !status.success() {
         println!("Error stopping deployment. You may wish to run `nibc-forge clean` to remove any associated docker containers, networks, and/or volumes.");
-        return Err(AppError::DockerCommand("docker-compose down failed".into()));
+        return Err(AppError::DockerCommand("docker compose down failed".into()));
     }
 
     Ok(())

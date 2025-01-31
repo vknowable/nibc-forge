@@ -13,7 +13,8 @@ pub fn handle_start(args: crate::DeploymentArgs) -> Result<(), AppError> {
     let compose_files = deployment_compose_files(deployment_dir)?;
 
     // Check for running containers associated with this deployment
-    let mut ps_command = Command::new("docker-compose");
+    let mut ps_command = Command::new("docker");
+    ps_command.arg("compose");
     for compose_file in &compose_files {
         ps_command.arg("-f").arg(compose_file.to_str().unwrap());
     }
@@ -30,7 +31,8 @@ pub fn handle_start(args: crate::DeploymentArgs) -> Result<(), AppError> {
     for compose_file in compose_files.iter() {
         println!("Using compose file: {}", compose_file.display());
 
-        let mut up_command = Command::new("docker-compose");
+        let mut up_command = Command::new("docker");
+        up_command.arg("compose");
         up_command
             .arg("-f")
             .arg(compose_file.to_str().unwrap())
@@ -46,7 +48,7 @@ pub fn handle_start(args: crate::DeploymentArgs) -> Result<(), AppError> {
             println!("Failed to start components for compose file: {}. Is there a name, resource or port conflict with another module or a previous deployment?", compose_file.display());
             println!("You can also run `nibc-forge clean` to remove any associated docker containers, networks, and/or volumes and try again.");
             return Err(AppError::DockerCommand(
-                format!("docker-compose up failed for {}", compose_file.display()).into(),
+                format!("docker compose up failed for {}", compose_file.display()).into(),
             ));
         }
 
@@ -56,7 +58,7 @@ pub fn handle_start(args: crate::DeploymentArgs) -> Result<(), AppError> {
     // List all resources created by the deployment
     list_resources("container", project_name)?;
     list_resources("network", project_name)?;
-    list_resources("volume", project_name)?;
+    // list_resources("volume", project_name)?; // TODO: listing volumes by project_name is not supported
 
     println!("\nCreating the IBC channels may take several minutes. Follow the logs of the Hermes container to monitor the progress.");
 

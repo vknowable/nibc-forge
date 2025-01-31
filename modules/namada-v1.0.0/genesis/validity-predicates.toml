@@ -1,5 +1,0 @@
-[wasm.vp_implicit]
-filename = "vp_implicit.wasm"
-
-[wasm.vp_user]
-filename = "vp_user.wasm"

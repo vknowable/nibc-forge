@@ -3,10 +3,10 @@ use crate::utils::deployment_compose_files;
 use std::path::Path;
 use std::process::Command;
 
-pub fn handle_clean(args: crate::CleanArgs) -> Result<(), AppError> {
+pub fn handle_clean(args: crate::DeploymentArgs) -> Result<(), AppError> {
     println!(
-        "Cleaning deployment in directory: {}. Wipe chain data: {}",
-        args.deployment_dir, args.chain_data
+        "Cleaning deployment in directory: {}",
+        args.deployment_dir
     );
     
     let deployment_dir = Path::new(&args.deployment_dir);
@@ -16,7 +16,8 @@ pub fn handle_clean(args: crate::CleanArgs) -> Result<(), AppError> {
     let compose_files = deployment_compose_files(deployment_dir)?;
 
     // First, run docker-compose down
-    let mut down_command = Command::new("docker-compose");
+    let mut down_command = Command::new("docker");
+    down_command.arg("compose");
     for compose_file in &compose_files {
         down_command.arg("-f").arg(compose_file.to_str().unwrap());
     }
