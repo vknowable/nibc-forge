@@ -9,6 +9,9 @@ A deployment consists of:
 - Other supporting processes like namada-indexer or namada-masp-indexer
 - Supporting start-up scripts, config etc.
 
+## Prerequisites
+You must have a recent version of Docker which includes the `docker compose` commands (not the older standalone `docker-compose`).
+
 ## Getting Started
 Commands are issued using the `nibc-forge` binary. Build it with:
 ```
