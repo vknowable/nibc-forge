@@ -62,8 +62,10 @@ for HOSTNAME in $CHAIN_HOSTS; do
   if [[ "${CHAIN_TYPE}" == "namada" ]]; then
     nam_borsh=$(curl -s curl -s "http://$HOSTNAME:26657/abci_query?path=\"/shell/native_token\"&prove=false" | jq -r .result.response.value)
     DENOM=$(addr-decode $nam_borsh)
-  else
+  elif [[ "${CHAIN_TYPE}" == "gaia" ]]; then
     DENOM=$(curl -s "http://$HOSTNAME:1317/feemarket/v1/params" | jq -r .params.fee_denom)
+  elif [[ "${CHAIN_TYPE}" == "osmosis" ]]; then
+    DENOM=$(curl -s "http://$HOSTNAME:1317/osmosis/txfees/v1beta1/base_denom" | jq -r .base_denom)
   fi
 
   # update the hermes config
@@ -98,17 +100,41 @@ for HOSTNAME in $CHAIN_HOSTS; do
   ((i++))
 done
 
-# initialize the channels between the first chain (chain 0) and all other chains
 CHAIN_IDS_ARRAY=($CHAIN_IDS)
-i=1
-for CHAIN in "${CHAIN_IDS_ARRAY[@]:1}"; do
-  echo "Creating channel between ${CHAIN_IDS_ARRAY[0]} and ${CHAIN_IDS_ARRAY[i]}... this may take 3 to 5 minutes"
-  log_file="/root/.hermes/${CHAIN_IDS_ARRAY[0]}_${CHAIN_IDS_ARRAY[i]}.log"
-  json_file="/root/.hermes/${CHAIN_IDS_ARRAY[0]}_${CHAIN_IDS_ARRAY[i]}.json"
-  hermes --json create channel --a-chain ${CHAIN_IDS_ARRAY[0]} --b-chain ${CHAIN_IDS_ARRAY[i]} --a-port transfer --b-port transfer --new-client-connection --yes > $log_file
-  cat $log_file
+num_chains=${#CHAIN_IDS_ARRAY[@]}
 
-  # save the last json object in the log file (which holds the channel creation result) to a json file for easy reference later
-  cat $log_file | jq -s '.[-1]' > $json_file
-  ((i++))
-done
+# depending on the value of the TOPOLOGY variable, connect the chains either in a mesh or hub-and-spoke manner
+# mesh: establish ibc connections between all chains
+# hub: (default) establish ibc connections between the first chain and all other chains
+
+if [ "$TOPOLOGY" == "mesh" ]; then
+  # initialize channels between all chains (mesh topology)
+  for ((i=0; i<num_chains-1; i++)); do
+    for ((j=i+1; j<num_chains; j++)); do
+      echo "Creating channel between ${CHAIN_IDS_ARRAY[i]} and ${CHAIN_IDS_ARRAY[j]}... this may take 3 to 5 minutes"
+      log_file="/root/.hermes/${CHAIN_IDS_ARRAY[i]}_${CHAIN_IDS_ARRAY[j]}.log"
+      json_file="/root/.hermes/${CHAIN_IDS_ARRAY[i]}_${CHAIN_IDS_ARRAY[j]}.json"
+      
+      hermes --json create channel --a-chain ${CHAIN_IDS_ARRAY[i]} --b-chain ${CHAIN_IDS_ARRAY[j]} --a-port transfer --b-port transfer --new-client-connection --yes > $log_file
+      cat $log_file
+
+      # save the last json object in the log file (which holds the channel creation result) to a json file for easy reference later
+      cat $log_file | jq -s '.[-1]' > $json_file
+    done
+  done
+
+else
+  # initialize the channels between the first chain (chain 0) and all other chains (hub and spoke topology)
+  i=1
+  for CHAIN in "${CHAIN_IDS_ARRAY[@]:1}"; do
+    echo "Creating channel between ${CHAIN_IDS_ARRAY[0]} and ${CHAIN_IDS_ARRAY[i]}... this may take 3 to 5 minutes"
+    log_file="/root/.hermes/${CHAIN_IDS_ARRAY[0]}_${CHAIN_IDS_ARRAY[i]}.log"
+    json_file="/root/.hermes/${CHAIN_IDS_ARRAY[0]}_${CHAIN_IDS_ARRAY[i]}.json"
+    hermes --json create channel --a-chain ${CHAIN_IDS_ARRAY[0]} --b-chain ${CHAIN_IDS_ARRAY[i]} --a-port transfer --b-port transfer --new-client-connection --yes > $log_file
+    cat $log_file
+
+    # save the json result
+    cat $log_file | jq -s '.[-1]' > $json_file
+    ((i++))
+  done
+fi

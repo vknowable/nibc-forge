@@ -1,0 +1,26 @@
+services:
+  osmosis-node:
+    restart: unless-stopped
+    hostname: ${HOSTNAME:-osmosis-node}
+    image: osmosis:v28.0.1
+    user: root
+    entrypoint: [ "sh", "-c", "chmod +x /docker-entrypoint-scripts.d/on-start.sh && /docker-entrypoint-scripts.d/on-start.sh" ]
+    volumes:
+      - ./on-start.sh:/docker-entrypoint-scripts.d/on-start.sh
+      - ./init-chain.sh:/docker-entrypoint-scripts.d/init-chain.sh:ro
+      - ./init-xcs.sh:/scripts/init-xcs.sh:ro
+      - ./bytecode:/root/bytecode:ro
+      - ./jenv.sh:/scripts/jenv.sh:ro
+    
+    environment:
+      - CHAIN_ID=${CHAIN_ID:-osmosis-local}
+      - DENOM=${DENOM:-uosmo}
+      - VALIDATOR_KEY=${VALIDATOR_KEY:-f9f762ae36cbbd1f56447893938a5a05103acf5bc8ff86ab89e780dc59df4c9a} # osmo1s6prdpndfq2gpxx00pp95lqtm7kdwhrgclhnfv
+      # mnemonic for the relayer key below: (you'll need this for hermes)
+      # voyage dust hand garlic fun trend bomb basic whisper mail camp egg basic normal dial crater prosper verb lyrics couch twenty matrix black example
+      - RELAYER_KEY=${RELAYER_KEY:-a231fbc182e3d97586998e5d6c513742244a712cfccf70276851ea13898091ad} # osmo16fzklxmtdf7p5396396226vrdcjpkf25ur0kxm
+      - FAUCET_KEY=${FAUCET_KEY:-a5e156429e5beefed5dec348026b02870fb0416f86a5c9e3bba1f7bd4dcaa6bc} # osmo1fs6q65e95hmegp5nwjw59zu205y602jtsjpx9u
+      - POOLS_KEY=${POOLS_KEY:-10cc27e1703e45cdbbe5f930883d0dd0d35087b45e9bf5ec2cd667582ab42595} # osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc
+    ports:
+      - "${RPC_PORT:-27657}:26657"
+      - "${REST_PORT:-1317}:1317"

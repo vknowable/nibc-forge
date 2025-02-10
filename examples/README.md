@@ -1,8 +1,3 @@
 # Example deployments
 
-module_dir: required
-type: required
-rpc-hostname: optional, required for chain-type if hermes is being used
-relayer_key: required
-hermes_template: optional, default=hermes_templates/{type}.toml
-note: the first chain listed is the hub or 'source' chain to which others are connected
+This folder contains some example deployments that can be used as-is or as reference for creating your own. For further details on creating a deployment config file, see the info in `../docs`.

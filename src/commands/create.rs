@@ -81,21 +81,6 @@ pub fn handle_create(args: crate::CreateArgs) -> Result<(), AppError> {
         }
     }
 
-    // Ensure unique hostnames and module_dirs
-    // TODO: this is a temporary solution until a strategy to handle multiple copies of the same module is in place
-    // let mut seen_hostnames = HashSet::new();
-    // let mut seen_module_dirs = HashSet::new();
-    // for module in &config.modules {
-    //     if let Some(hostname) = &module.rpc_hostname {
-    //         if !seen_hostnames.insert(hostname) {
-    //             validation_errors.push("All modules must have a unique hostname".to_string());
-    //         }
-    //     }
-    //     if !seen_module_dirs.insert(&module.module_dir) {
-    //         validation_errors.push("All modules must have a unique module_dir".to_string());
-    //     }
-    // }
-
     // TODO: check docker compose files for conflicting host ports, volume names, service names, or docker hostnames
     // // Check for conflicts in docker-compose.yml
     // let mut resource_map: HashMap<String, HashSet<String>> = HashMap::new();
@@ -215,24 +200,6 @@ pub fn handle_create(args: crate::CreateArgs) -> Result<(), AppError> {
             }
             None => return Err(AppError::Unknown)
         }
-
-    // let config_output_path = {deployment_dir}/{module_dir}/config.toml
-    // let output_toml = []
-    // construct the final toml by starting with the hermes module hermes_template toml and appending the hermes_template for each chain
-    // load toml hermes_module.hermes_template and push to output_toml
-    // for each module in chain_modules:
-    // load the toml for module.hermes_template
-    // edit the following keys (in memory, leave original file untouched):
-    // id = 'CHAIN_{current_index}'
-    // rpc_addr = 'http://HOST_{current_index}:26657'
-    // grpc_addr = 'http://HOST_{current_index}:9090'
-    // event_source = { mode = 'push', url = 'ws://HOST_{current_index}:26657/websocket', batch_delay = '500ms' }
-    // key_name = 'KEY_{current_index}'
-    // gas_price.denom = 'DENOM_{current_index}'
-    // push edited toml contents to output_toml
-    // end for loop
-    // write output_toml to config_output_path
-
     }
 
     if !validation_warnings.is_empty() {

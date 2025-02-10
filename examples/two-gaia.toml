@@ -1,4 +1,6 @@
 # Create a local namada chain, two local gaia chains and connect them with hermes
+# This shows how to run multiple instances of the same chain; but note that it's up to the user to ensure there are no port conflicts
+# by changing the default values
 
 [[modules]]
 module_dir = "modules/namada"

@@ -1,7 +1,7 @@
 # Namada Indexer
 
 ### Usage
-1. **In another directory** e.g. your home directory, clone the [namada-indexer](https://github.com/anoma/namada-indexer) repo and build the containers:
+1. Before using, you must build the containers. **In another directory**, such as your home directory, clone the [namada-indexer](https://github.com/anoma/namada-indexer) repo and build the containers:
 ```
 cd ~
 git clone https://github.com/anoma/namada-indexer && cd namada-indexer

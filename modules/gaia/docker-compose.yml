@@ -19,3 +19,4 @@ services:
       - FAUCET_KEY=${FAUCET_KEY:-a5e156429e5beefed5dec348026b02870fb0416f86a5c9e3bba1f7bd4dcaa6bc} # cosmos1fs6q65e95hmegp5nwjw59zu205y602jtcfjknw
     ports:
       - "${RPC_PORT:-27657}:26657"
+      - "${REST_PORT:-1318}:1317"

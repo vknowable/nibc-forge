@@ -1,0 +1,44 @@
+# Use this config file to setup a testing environment for crosschain swaps
+# See the readme at ../docs/xcs.md for full step by step instructions
+
+[[modules]]
+module_dir = "modules/osmosis"
+type = "osmosis"
+rpc_hostname = "osmosis-node"
+relayer_key = "voyage dust hand garlic fun trend bomb basic whisper mail camp egg basic normal dial crater prosper verb lyrics couch twenty matrix black example"
+hermes_template = "hermes_templates/osmosis.toml"
+docker_env = 'RPC_PORT=46689,REST_PORT=1317'
+
+[[modules]]
+module_dir = "modules/namada"
+type = "namada"
+rpc_hostname = "namada-node"
+relayer_key = "00915b40d8ab5b59f4b7d2448bc290f1542a00f84d9a0be1b4e3e4d1ef17349b78"
+hermes_template = "hermes_templates/namada.toml"
+docker_env = 'RPC_PORT=46678'
+
+[[modules]]
+module_dir = "modules/gaia"
+type = "gaia"
+rpc_hostname = "gaia-node"
+relayer_key = "voyage dust hand garlic fun trend bomb basic whisper mail camp egg basic normal dial crater prosper verb lyrics couch twenty matrix black example"
+hermes_template = "hermes_templates/gaia.toml"
+docker_env = 'RPC_PORT=46688,REST_PORT=1318'
+
+[[modules]]
+module_dir = "modules/hermes"
+type = "hermes"
+hermes_template = "hermes_templates/hermes.toml"
+docker_env = 'TOPOLOGY=mesh'
+
+[[modules]]
+module_dir = "modules/namada-indexer"
+type = "aux"
+
+[[modules]]
+module_dir = "modules/namada-masp-indexer"
+type = "aux"
+
+[[modules]]
+module_dir = "modules/pg-admin"
+type = "aux"
